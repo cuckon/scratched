@@ -1,0 +1,87 @@
+
+/*
+shader scratch(
+	float density=1,
+	float curvature=1,
+	float width=0.01,
+	output color Cf = 0
+){
+	float r = curvature;
+	int search_r = (int)r+1;
+	float scratched = 100;
+	float len;
+	point center;
+	for(int xx = (int)P[0] - search_r; xx < search_r ; xx++)
+		for(int yy = (int)P[1] - search_r; yy < search_r; yy++)
+			for(int zz = (int)P[2] - search_r; zz < search_r; zz++) {
+				center = point(xx, yy, zz);
+				len = length(P - center);
+				//center += hashnoise(center) - point(0.5);
+				//float current_scratch = aastep(curvature-width, len) - aastep(curvature, len);
+				scratched = min(scratched, len);
+			}
+	Cf = scratched;
+
+}
+
+vector to_space(vector xbasis, vector ybasis, vector zbasis, vector from){
+	matrix m = matrix(
+		xbasis[0], ybasis[0], zbasis[0], 0,
+		xbasis[1], ybasis[1], zbasis[1], 0,
+		xbasis[2], ybasis[2], zbasis[2], 0,
+		0, 0, 0, 1
+	);
+	return transform(m, from);
+}
+*/
+
+
+vector to_space(vector xbasis, vector ybasis, vector zbasis, vector from){
+	return vector(dot(xbasis, from), dot(ybasis, from), dot(zbasis, from));
+}
+
+
+
+shader scratch(
+	float density=1,
+	float curvature=1,
+	float width=0.01,
+	float offset=0,
+	output color Cf = 0
+){
+	float r = curvature;
+	int search_r = (int)r+1;
+	float scratched = 0;
+	float len, diminished_width, distance_along_N, anisotropy_direction;
+	vector dir, Ngn = normalize(Ng), dir_ts;
+	point center;
+	// Cf = float(noise("simplex", P));
+	// return;
+	for(int xx = (int)P[0] - search_r; xx < (int)P[0] + search_r + 1; xx++)
+		for(int yy = (int)P[1] - search_r; yy < (int)P[1] + search_r + 1; yy++)
+			for(int zz = (int)P[2] - search_r; zz < (int)P[2] + search_r + 1; zz++) {
+				center = point(xx, yy, zz);
+				center += hashnoise(center) - point(0.5);
+				dir = center - P;
+				len = length(dir);
+				distance_along_N = abs(dot(dir, Ngn));
+				diminished_width = width * pow(1-linearstep(0, r-width, distance_along_N), 0.2);
+				// printf("%f, %f\n", r-width, distance_along_N);
+				len += float(noise("simplex", P + center));
+				float current_scratch = aastep(r-diminished_width, len) - aastep(r, len);
+				scratched = max(scratched, current_scratch);
+
+				if (scratched>1e-3){
+					dir_ts = normalize(to_space((dPdu), (dPdv), Ngn, dir));
+					anisotropy_direction = atan(dir_ts[0]/dir_ts[1])/M_2PI + offset;
+					Cf = color(anisotropy_direction, scratched, 0);
+					// Cf = atan(dir_ts[0]/dir_ts[1]);
+
+					return;
+				}
+			}
+	// printf(".");
+	// Cf = scratched;
+
+}
+
