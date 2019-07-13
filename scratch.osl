@@ -22,7 +22,7 @@ shader scratch(
 	float anisotropic_max = 0.2,
 	float anisotropic_default = 0,
     float width=0.001,
-    float offset=0.25,
+    float offset=0.0,
     output color Cf = 0
 ){
     float delta = 1.0/(DIVISION - 1);
