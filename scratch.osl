@@ -1,10 +1,8 @@
+// Micro Scratched Texture
+// Author: John Su
+// Based on the idea of 
 #define DIVISION 40
-#define MAX_RADIUS 0.2
 #define DEBUG(_) Cf=_; return;
-
-vector to_space(vector xbasis, vector ybasis, vector zbasis, vector from){
-    return vector(dot(xbasis, from), dot(ybasis, from), dot(zbasis, from));
-}
 
 
 float line(point p, float direction, float width){
@@ -16,19 +14,27 @@ float line(point p, float direction, float width){
 
 
 shader scratch(
-    float density=1,
-    float width=0.01,
+	float density=0.1,
+	float roughness_min=0.0,
+	float roughness_max=0.01,
+	float roughness_default = 0.1,
+	float anisotropic_min = 0.1,
+	float anisotropic_max = 0.2,
+	float anisotropic_default = 0,
+    float width=0.001,
     float offset=0.25,
     output color Cf = 0
 ){
     float delta = 1.0/(DIVISION - 1);
-    int max_search_cell = (int)ceil(MAX_RADIUS/delta);
+    float max_radius = sqrt(density);
+    int max_search_cell = (int)ceil(max_radius/delta);
     point index = point(round(u/delta), round(v/delta), 0.0);
     point shading_p = point(u, v , 0.0);
     point current_index;
 
     point current_origin_p;
     float scratch = 0, direction=0;
+    float roughness = roughness_default, anisotropic = anisotropic_default;
     for (int x = -max_search_cell; x <= max_search_cell; ++x){
         for (int y = -max_search_cell; y <= max_search_cell; ++y){
             current_index = index + point(x, y, 0);
@@ -41,11 +47,28 @@ shader scratch(
             	width * hashnoise(current_index)
             );
             if (scratch)
+            {
+            	roughness = roughness_default + mix(
+            		roughness_min,
+            		roughness_max,
+            		hashnoise(current_index + vector(123, 456, 1))
+            	);
+                anisotropic = anisotropic_default + mix(
+                	anisotropic_min,
+                	anisotropic_max,
+                	hashnoise(current_index + vector(123, 456, 2))
+                );
                 break;
+            }
         }
         if (scratch)
             break; 
     }
-    Cf = color(scratch, (direction * 0.5 + offset) * (scratch > 1e-4), 0);
+    
+    Cf = color(
+    	roughness,
+    	(direction * 0.5 + offset) * (scratch > 1e-4),
+    	anisotropic
+    );
 }
 
