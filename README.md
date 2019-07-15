@@ -9,7 +9,7 @@ and dielectric:
 
 <img src="./images/b.png" width="600" height="600">
 
-The original idea is based on Hang Li(悬挂鲤)'s article. Here I implemented it using OSL and exposured some arts friendly parameters.
+The original idea is from Hang Li(悬挂鲤) and Ben Paschke. Here I implemented it using OSL and exposured some arts friendly parameters.
 
 
 # Parameters

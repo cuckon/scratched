@@ -4,8 +4,8 @@
 //
 // An OSL shader that generates texture to make swirly micro scratch look by
 // controlling the anistropy and roughness.
-// The original idea is based on Hang Li(悬挂鲤)'s article. I just implemented it
-// using OSL and added some arts friendly parameters.
+// The original idea is from Hang Li(悬挂鲤) and Ben Paschke. Here I implemented
+// it using OSL and exposured some arts friendly parameters.
 
 #define DIVISION 40
 #define DEBUG(_) Cf=_; return;
